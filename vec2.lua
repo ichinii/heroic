@@ -1,9 +1,7 @@
 local vec2 = {}
+
 do
-    local meta = {
-			_metatable = "Private metatable",
-			_DESCRIPTION = "vec2s in 2D"
-    }
+    local meta = {}
 
     meta.__index = meta
 
@@ -42,7 +40,7 @@ do
     end
 
     function meta:__tostring()
-			return ("<%g, %g>"):format(self.x, self.y)
+			return ("(%g | %g)"):format(self.x, self.y)
     end
 
     function meta:magnitude()
