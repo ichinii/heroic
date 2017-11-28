@@ -28,6 +28,7 @@ function removeProcess(key, process)
 end
 
 function reset()
+	time = love.timer.getTime()
 	player = { pos = vec2(0, 0), move = nil }
 	camera = { pos = copy(player.pos) }
 	enemies = {}
@@ -39,6 +40,8 @@ function reset()
 end
 
 function love.load()
+	score = nil
+
 	abilities = {
 		q = Ability(
 			1,
@@ -69,7 +72,7 @@ function love.load()
 			end,
 			function(process)
 				love.graphics.setColor(255, 0, 0, math.mix(process.time / 0.5, 255, 0))
-				love.graphics.circle("fill", process.pos.x, process.pos.y, 50)
+				love.graphics.circle("fill", process.pos.x, process.pos.y, 30)
 			end
 		),
 		w = Ability(
@@ -97,8 +100,8 @@ function love.load()
 				end
 			end,
 			function(process)
-				love.graphics.setColor(0, 255, 0, 255)
-				love.graphics.circle("fill", process.pos.x, process.pos.y, 100)
+				love.graphics.setColor(50, 255, 100, 255)
+				love.graphics.circle("fill", process.pos.x, process.pos.y, 80)
 			end
 		)
 	}
@@ -107,10 +110,15 @@ function love.load()
 end
  
 function love.update(dt)
-	camera.pos = camera.pos + (player.pos - camera.pos) / 32
+	camera.pos = camera.pos + (player.pos - camera.pos) / 64
 
 	for k, enemy in pairs(enemies) do
 		if (player.pos - enemy.pos):length() < 20+30 then
+			local currentScore = love.timer.getTime() - time
+			if not score or currentScore > score then
+				score = currentScore
+			end
+
 			reset()
 			return
 		end
@@ -181,6 +189,25 @@ function love.draw()
 		love.graphics.getHeight() / 2 - camera.pos.y)
 	--
 
+	local grid = 100
+	love.graphics.setColor(100, 100, 100, 255)
+	for 
+		x = math.floor((camera.pos.x - love.graphics.getWidth() / 2) / grid) * grid,
+		camera.pos.x + love.graphics.getWidth() / 2,
+		grid
+	do
+		love.graphics.line(x, camera.pos.y - love.graphics.getHeight() / 2,
+				x, camera.pos.y + love.graphics.getHeight() / 2)
+	end
+	for 
+		y = math.floor((camera.pos.y - love.graphics.getHeight() / 2) / grid) * grid,
+		camera.pos.y + love.graphics.getHeight() / 2,
+		grid
+	do
+		love.graphics.line(camera.pos.x - love.graphics.getWidth() / 2, y,
+				camera.pos.x + love.graphics.getWidth() / 2, y)
+	end
+
 	for ak, av in pairs(processes) do
 		for pk, pv in pairs(av) do
 			if abilities[ak].drawFn then
@@ -190,13 +217,30 @@ function love.draw()
 	end
 
 	for k, enemy in pairs(enemies) do
-		love.graphics.setColor(255, 0, 255, 255)
+		love.graphics.setColor(100, 0, 255, 255)
 		love.graphics.circle("fill", enemy.pos.x, enemy.pos.y, 20)
 	end
 
 	love.graphics.setColor(255, 255, 255, 255)
 	love.graphics.circle("fill", player.pos.x, player.pos.y, 30)
 
+	if player.move then
+		love.graphics.circle("line", player.move.x, player.move.y, 10)
+	end
+
 	--
 	love.graphics.pop()
+
+	love.graphics.setColor(255, 255, 255, 255)
+	love.graphics.print("time: "..
+			tostring(math.floor(love.timer.getTime() - time)), 20, 20)
+	if score then
+		love.graphics.print("score: "..
+				tostring(math.floor(score)), 20, 40)
+	end
+
+	love.graphics.print("'mouse right' to move", 20, love.graphics.getHeight() - 40)
+	love.graphics.print("'s' to stop", 20, love.graphics.getHeight() - 60)
+	love.graphics.print("'q' to attack", 20, love.graphics.getHeight() - 80)
+	love.graphics.print("'w' to stun", 20, love.graphics.getHeight() - 100)
 end
