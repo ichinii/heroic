@@ -8,8 +8,20 @@ function copy(obj, seen)
   return res
 end
 
-function math.mix(f, a, b)
-	return a + (b - a) * f
+if not math.mix then
+	function math.mix(f, a, b)
+		return a + (b - a) * f
+	end
+end
+
+function mouseWorldPos()
+	return camera.pos
+			+ vec2(love.mouse.getX(), love.mouse.getY())
+			- vec2(love.graphics.getWidth(), love.graphics.getHeight()) / 2
+end
+
+function mouseScreenPos()
+	return vec2(love.mouse.getX(), love.mouse.getY())
 end
 
 -- https://coronalabs.com/blog/2014/09/02/tutorial-printing-table-contents/
