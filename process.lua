@@ -21,6 +21,9 @@ end
 
 function Process:remove(process)
 	local index = Process:indexOf(process)
+	if Process.processes[index].endFn then
+		Process.processes[index].endFn(Process.processes[index])
+	end
 	if index then
 		table.remove(Process.processes, index)
 	end
@@ -36,6 +39,9 @@ function Process:update(dt)
 		end
 
 		if process.duration and process.duration < process.time then
+			if process.endFn then
+				process.endFn(process)
+			end
 			table.remove(Process.processes, i)
 		end
 	end
@@ -52,12 +58,13 @@ end
 do
 	local meta = {}
 
-	function meta:__call(duration, time, data, updateFn, drawFn)
-		local process = copy(data or {})
+	function meta:__call(duration, time, data, updateFn, drawFn, endFn)
+		local process = data or {}
 		process.duration = duration
 		process.time = time or 0
 		process.updateFn = updateFn
 		process.drawFn = drawFn
+		process.endFn = endFn
 		return process
 	end
 

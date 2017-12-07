@@ -39,6 +39,14 @@ do
 			return vec2(self.x / length, self.y / length)
     end
 
+		function meta:rotated(angle)
+			local cs = math.cos(angle)
+			local sn = math.sin(angle)
+			return vec2(
+					self.x * cs - self.y * sn,
+					self.x * sn + self.y * cs)
+		end
+
     function meta:__tostring()
 			return ("(%g | %g)"):format(self.x, self.y)
     end

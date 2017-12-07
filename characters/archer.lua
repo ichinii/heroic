@@ -1,18 +1,22 @@
 require "util"
 Process = require "process"
+CharacterState = require "characterstate"
 
-local function Archer()
+local function Character()
 	return
-	{ 
+	{
+		pos = vec2(),
+		move = nil,
+		state = CharacterState(),
 		abilities = 
 		{
-			q = Ability(0.125, function(self) --trigger
+			q = Ability(0, function(self, character) --trigger
 					table.insert(Process.processes, Process(
 						1,
 						0,
 						{
 							pos = copy(player.pos),
-							dir = (mouseWorldPos() - player.pos):normalized()
+							dir = (mouseWorldPos() - character.pos):normalized(),
 						},
 						function(process, dt) self.updateFn(process, dt) end,
 						function(process) self.drawFn(process) end
@@ -34,29 +38,51 @@ local function Archer()
 					love.graphics.circle("fill", process.pos.x, process.pos.y, 10)
 				end
 			),
-			w = Ability(5, function(self) --trigger
-					local pos = mouseWorldPos()
+			e = Ability(1, function(self, character)
+				character.state.immobilized = character.state.immobilized + 1
+				local dir = (mouseWorldPos() - character.pos):normalized()
 
-					table.insert(Process.processes, Process(
-						3.5,
-						0,
-						{ pos = pos },
-						function(process, dt) self.updateFn(process, dt) end,
-						function(process) self.drawFn(process) end
-					))
-				end, function(process, dt) --update
-					for k, enemy in pairs(enemies) do
-						if (process.pos - enemy.pos):length() <= 100 then
-							enemy.stunned = true
+				table.insert(Process.processes, Process(
+					0.2,
+					0,
+						{ dir = dir, character = character },
+						self.updateFn,
+						self.drawFn,
+						function(process)
+							process.character.state.immobilized = process.character.state.immobilized - 1
 						end
-					end
-				end, function(process) --draw
-					love.graphics.setColor(50, 255, 100, 255)
-					love.graphics.circle("fill", process.pos.x, process.pos.y, 80)
+					))
+				end, function(process, dt)
+					process.character.pos = process.character.pos +
+							process.dir * dt *
+							(200 / process.duration)
+				end, function(process)
+				end),
+			w = {
+				cooldown = 1,
+				time = 0,
+				triggerFn = function(self, character) 
+					character.state.immobilized = character.state.immobilized + 1
+					local dir = (mouseWorldPos() - character.pos):normalized()
+
+					table.insert(Process.processes, {
+						ability = self,
+						character = character,
+						dir = dir,
+						duration = 0.2,
+						time = 0,
+						updateFn = function(process, dt)
+							process.character.pos = process.character.pos +
+									process.dir * dt *
+									(200 / process.duration)
+						end, endFn = function(process)
+							process.character.state.immobilized = process.character.state.immobilized - 1
+						end, drawFn = function(process) end
+					})
 				end
-			)
+			}
 		}
 	}
 end
 
-return Archer
+return Character
